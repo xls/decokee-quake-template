@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls *)",
+      "Bash(mkdir *)",
+      "Bash(npx electron*)",
+      "Bash(git log *)",
+      "Bash(diff *)",
+      "Bash(sed *)",
+      "Bash(find *)",
+      "Bash(echo *)",
+      "Bash(wsl *)",
+      "Bash(cd *)",
+      "Bash(grep *)"
+    ]
+  }
+}

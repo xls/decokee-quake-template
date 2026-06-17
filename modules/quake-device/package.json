@@ -1,0 +1,17 @@
+{
+  "name": "quake-device",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Control library and test CLI for the DecoKee QUAKE display over raw HID",
+  "type": "module",
+  "main": "index.js",
+  "bin": {
+    "quake": "cli.js"
+  },
+  "scripts": {
+    "quake": "node cli.js"
+  },
+  "dependencies": {
+    "node-hid": "2.1.2"
+  }
+}
