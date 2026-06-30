@@ -130,9 +130,10 @@ export default {
     },
     created() {
         this.showAdsView = !this.disableAds;
-        // Auto "new version available" check disabled — it polls the official
-        // upstream repo. Re-enable to restore the startup update dialog.
-        // this.checkForUpdates();
+        // Update check is a no-op unless the user has configured their OWN release
+        // source in Settings (system.updateCheckUrl). It no longer polls the
+        // official upstream repo by default. See plugins/VersionHelper.js.
+        this.checkForUpdates();
     },
     methods: {
         showSettings() {
