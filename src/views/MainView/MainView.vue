@@ -130,7 +130,9 @@ export default {
     },
     created() {
         this.showAdsView = !this.disableAds;
-        this.checkForUpdates();
+        // Auto "new version available" check disabled — it polls the official
+        // upstream repo. Re-enable to restore the startup update dialog.
+        // this.checkForUpdates();
     },
     methods: {
         showSettings() {

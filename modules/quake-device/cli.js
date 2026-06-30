@@ -10,8 +10,10 @@
  *   screen on|off              turn the display on/off
  *   brightness [0-255]         set brightness, or read it when no value given
  *   mic on|off                 enable/disable the mic, or read it
- *   led on|off                 enable/disable the LED
- *   buzzer on|off              alias for led
+ *   led on|off                 enable/disable the WS2812 LED effect (cmd 0x06)
+ *   tone <value> [ms]          drive the piezo buzzer (cmd 0x02); 0 = silent.
+ *                              with ms, beep for that long then go silent
+ *   buzzer|beep [tone] [ms]    quick beep (default tone 200 for 100ms)
  *   key <action> <id> <code>   send a key/action frame
  *   ping                       send one keep-alive ping
  *   wake [seconds]             screen on + full brightness + keep-alive
@@ -36,7 +38,10 @@ Commands:
   screen on|off              turn the display on/off
   brightness [0-255]         set brightness, or read it when no value given
   mic on|off                 enable/disable the mic, or read it
-  led on|off                 enable/disable the LED (alias: buzzer)
+  led on|off                 enable/disable the WS2812 LED effect (cmd 0x06)
+  tone <value> [ms]          drive the piezo buzzer (cmd 0x02); 0 = silent.
+                             with ms, beep for that long then go silent
+  buzzer|beep [tone] [ms]    quick beep (default tone 200 for 100ms)
   key <action> <id> <code>   send a key/action frame
   ping                       send one keep-alive ping
   wake [seconds]             screen on + full brightness + keep-alive
@@ -141,10 +146,31 @@ async function main() {
                 }
                 break;
             }
-            case 'led':
-            case 'buzzer': {
-                dev.setBuzzer(onOff(args[0]));
-                console.log(`${cmd} ${args[0]}`);
+            case 'led': {
+                dev.setLed(onOff(args[0]));
+                console.log(`led ${args[0]}`);
+                break;
+            }
+            case 'tone': {
+                // tone <value> [ms] — drive the buzzer at <value>; if ms given,
+                // beep for that long then go silent, else leave it on.
+                const value = Number(args[0]);
+                if (args[1] !== undefined) {
+                    await dev.beep(value, Number(args[1]));
+                    console.log(`beeped tone=${value} for ${Number(args[1])}ms`);
+                } else {
+                    dev.setBuzzerTone(value);
+                    console.log(`tone set to ${value} (use "tone 0" to silence)`);
+                }
+                break;
+            }
+            case 'buzzer':
+            case 'beep': {
+                // beep [tone] [ms] — quick beep (defaults 200 for 100ms).
+                const tone = args[0] !== undefined ? Number(args[0]) : 200;
+                const ms = args[1] !== undefined ? Number(args[1]) : 100;
+                await dev.beep(tone, ms);
+                console.log(`beep tone=${tone} ms=${ms}`);
                 break;
             }
             case 'touch': {

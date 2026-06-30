@@ -1,6 +1,13 @@
 # DecoKee QUAKE
 
-A clean desktop base for driving the **DecoKee QUAKE** display.
+<p align="center">
+  <img src="docs/dkquake.jpg" alt="DecoKee QUAKE — wide HDMI touch panel with jog wheel" width="640">
+</p>
+
+A clean desktop base for driving the **DecoKee QUAKE** display — the wide,
+jog-wheel touch panel shown above. It connects to the PC as an HDMI monitor for
+its image and over USB HID for input, and this app keeps it awake, paints a
+fullscreen window on it, and exposes its device controls.
 
 The QUAKE is a wide touch panel that connects to the PC as an **HDMI monitor**
 (labelled `DK-QUAKE`, 1920×480) for its image, plus **USB HID** for its touch

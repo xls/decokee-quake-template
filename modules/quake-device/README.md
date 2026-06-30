@@ -23,9 +23,16 @@ dev.on('press', () => console.log('knob pressed'));
 ```
 
 Key methods: `setScreen(on)`, `setBrightness(v)` / `getBrightness()`,
-`setMic(on)` / `getMic()`, `setLed(on)`, `getInfo()`, `sendKey(action, id, code)`,
-`enterDownloadMode()`, `ping()`, `startKeepAlive()` / `stopKeepAlive()`,
-`wake()`, `send(payload, flag)` (raw), `query(cmdID)`, `close()`.
+`setMic(on)` / `getMic()`, `setLed(on)` (WS2812 effect, cmd 0x06),
+`setBuzzerTone(tone)` / `beep(tone, ms)` / `playToneSequence([[tone,ms],...])`
+(piezo buzzer, cmd 0x02; tone 0 = silent), `getInfo()`,
+`sendKey(action, id, code)`, `enterDownloadMode()`, `ping()`,
+`startKeepAlive()` / `stopKeepAlive()`, `wake()`, `send(payload, flag)` (raw),
+`query(cmdID)`, `close()`.
+
+> Note: control cmd **0x02** is the piezo buzzer (tone); cmd **0x06** is the
+> LED effect enable. The host UI calls 0x06 "buzzer", but it makes no sound —
+> use `beep()`/`setBuzzerTone()` for audio.
 
 Events: `report`, `state`, `rotate`, `press`, `raw`, `error`.
 

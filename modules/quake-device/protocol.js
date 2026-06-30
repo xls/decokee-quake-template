@@ -30,11 +30,13 @@ export const FLAG = {
 
 // Control payload command ids (first byte of the payload array).
 export const CTL = {
-    SUB2: 2, // unknown — used by the product's _playSequence
+    BUZZER: 2, // [2, tone] piezo buzzer tone (0 = silent); the product's
+    //            _writeBuzzer/_playSequence drive this. (Was mislabeled "SUB2".)
     MIC: 3, // [3, on?1:0] set; [3] query
     SCREEN: 4, // [4, on?1:0]
     BRIGHTNESS: 5, // [5, 0..255] set; [5] query
-    BUZZER: 6, // [6, enabled?0:1]
+    LED: 6, // [6, mode] WS2812 effect enable (0 = off, 1/2/3 = on). The host
+    //          calls this "buzzer" but it does NOT make sound. (Was BUZZER:6.)
     KEY: 16, // [16, action, identifier, keyCode]
     INFO: 46, // [46] query -> device name + firmware version
     DFU: 47, // [47, 3] enter atmel-dfu bootloader

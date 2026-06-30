@@ -31,8 +31,12 @@
                 <el-switch v-model="state.mic" @change="onMicChange" />
             </el-form-item>
 
+            <el-form-item label="LED effect">
+                <el-switch v-model="state.led" @change="onLedChange" />
+            </el-form-item>
+
             <el-form-item label="Buzzer">
-                <el-switch v-model="state.buzzer" @change="onBuzzerChange" />
+                <el-button @click="onBeep">Test beep</el-button>
             </el-form-item>
 
             <el-form-item label="Firmware update">
@@ -55,7 +59,7 @@ export default {
         return {
             deviceArr: [],
             serialNumber: '',
-            state: { version: null, brightness: null, mic: false, buzzer: false },
+            state: { version: null, brightness: null, mic: false, led: false },
         };
     },
     created() {
@@ -106,7 +110,7 @@ export default {
                 version: s.version,
                 brightness: s.brightness === null ? 0 : s.brightness,
                 mic: !!s.mic,
-                buzzer: s.buzzer === null ? false : !!s.buzzer,
+                led: s.led === null ? false : !!s.led,
             };
         },
         onBrightnessChange(value) {
@@ -115,8 +119,12 @@ export default {
         onMicChange(value) {
             this.dcm.setQuakeMic(this.serialNumber, value);
         },
-        onBuzzerChange(value) {
-            this.dcm.setQuakeBuzzer(this.serialNumber, value);
+        onLedChange(value) {
+            this.dcm.setQuakeLed(this.serialNumber, value);
+        },
+        onBeep() {
+            // Quick test tone (cmd 0x02): 200 for 100ms.
+            this.dcm.playQuakeBuzzerTone(this.serialNumber, 200, 100);
         },
         onEnterDownloadMode() {
             ElMessageBox.confirm(

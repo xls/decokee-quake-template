@@ -559,8 +559,27 @@ class DeviceControlManager {
         HIDDeviceManager?.getQuakeService(serialNumber)?.setMic(enabled);
     }
 
+    /** Enable/disable the WS2812 LED effect (control cmd 0x06). */
+    setQuakeLed(serialNumber, enabled) {
+        HIDDeviceManager?.getQuakeService(serialNumber)?.setLed(enabled);
+    }
+
+    /**
+     * Sound the piezo buzzer (control cmd 0x02). With `ms`, beeps for that long
+     * then goes silent; otherwise holds the tone (use tone 0 to silence).
+     */
+    playQuakeBuzzerTone(serialNumber, tone = 200, ms = 100) {
+        const svc = HIDDeviceManager?.getQuakeService(serialNumber);
+        if (!svc) return;
+        return ms ? svc.beep(tone, ms) : svc.setBuzzerTone(tone);
+    }
+
+    /**
+     * @deprecated Was wired to cmd 0x06, which is the LED effect, not the buzzer.
+     * Kept for compatibility; forwards to setQuakeLed.
+     */
     setQuakeBuzzer(serialNumber, enabled) {
-        HIDDeviceManager?.getQuakeService(serialNumber)?.setBuzzer(enabled);
+        this.setQuakeLed(serialNumber, enabled);
     }
 
     /** Reboot the QUAKE into its firmware download (DFU) bootloader. */

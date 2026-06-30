@@ -62,8 +62,8 @@ export class QuakeDevice extends EventEmitter {
         this._keepAliveTimer = null;
         this._waiters = [];
         // Last-known hardware state, updated from incoming 0x55 reports. The
-        // buzzer has no read-back; the device powers up with it enabled.
-        this.state = { version: null, deviceName: null, brightness: null, mic: null, buzzer: true };
+        // buzzer tone (cmd 0x02) and LED effect (cmd 0x06) have no read-back.
+        this.state = { version: null, deviceName: null, brightness: null, mic: null, led: true };
 
         this.device.on('data', (data) => this._onData(data));
         this.device.on('error', (err) => {
@@ -187,16 +187,62 @@ export class QuakeDevice extends EventEmitter {
         return r.subData[0] === 1;
     }
 
-    // --- Buzzer ------------------------------------------------------------
-    setBuzzer(enabled) {
-        // Product sends enabled?0:1 for this command.
-        this.state.buzzer = !!enabled;
-        return this.send([CTL.BUZZER, enabled ? 0 : 1], FLAG.SET);
+    // --- Buzzer (piezo tone) ----------------------------------------------
+    // The real buzzer is control cmd 0x02: [2, tone], flag 1. `tone` is the
+    // PWM tone level (0 = silent); the device has no read-back for it. This is
+    // what the shipping product's _writeBuzzer sends — NOT cmd 0x06 (that is the
+    // LED effect, see setLed below).
+    setBuzzerTone(tone) {
+        const v = Math.max(0, Math.min(255, tone | 0));
+        return this.send([CTL.BUZZER, v], FLAG.SET);
     }
 
-    /** @deprecated alias for setBuzzer (0x06). */
-    setLed(enabled) {
-        return this.setBuzzer(enabled);
+    /** Stop any continuous tone (tone 0 = silent). */
+    stopBuzzer() {
+        return this.setBuzzerTone(0);
+    }
+
+    /**
+     * Beep: drive `tone` for `ms`, then go silent. Returns a promise that
+     * resolves once the buzzer is turned back off.
+     */
+    beep(tone = 200, ms = 100) {
+        this.setBuzzerTone(tone);
+        return new Promise((resolve) => {
+            setTimeout(() => {
+                this.setBuzzerTone(0);
+                resolve();
+            }, ms);
+        });
+    }
+
+    /**
+     * Play a tone sequence: an array of [tone, ms] steps. Mirrors the product's
+     * _playSequence (tone 0 = a rest). Resolves when the sequence finishes.
+     */
+    async playToneSequence(sequence) {
+        for (const [tone, ms] of sequence) {
+            this.setBuzzerTone(tone);
+            await new Promise((r) => setTimeout(r, ms));
+        }
+        this.setBuzzerTone(0);
+    }
+
+    // --- LED effect --------------------------------------------------------
+    // Control cmd 0x06: [6, mode], flag 1. Enables/disables the WS2812 ring
+    // effect (0 = off, 1/2/3 = on variants). The host UI labels this "buzzer",
+    // but it makes NO sound — use setBuzzerTone()/beep() for audio.
+    setLed(on) {
+        return this.send([CTL.LED, on ? 1 : 0], FLAG.SET);
+    }
+
+    /**
+     * @deprecated The old setBuzzer(0x06) was a misnomer AND inverted. It is the
+     * LED-effect enable, not the buzzer. Use setLed(on) for the LED, or
+     * setBuzzerTone()/beep() for actual sound.
+     */
+    setBuzzer(enabled) {
+        return this.setLed(enabled);
     }
 
     // --- Firmware / info ---------------------------------------------------
