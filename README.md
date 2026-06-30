@@ -87,3 +87,33 @@ node modules/quake-device/cli.js touch         # stream touch points
 ```
 
 Close the app first — a HID interface can only be opened by one process at a time.
+
+## Updates
+
+The app does **not** check the original upstream project for updates. The update
+source is yours to configure — point it at your own GitHub release (or any host).
+By default it is unset, so no update check runs and no network request is made.
+
+Configure it in **Settings → General**:
+
+- **Update check URL** — a URL returning JSON with a `version` field:
+  ```json
+  { "version": "1.2.0" }
+  ```
+  This can be a raw file in your repo or a release asset, e.g.
+  `https://raw.githubusercontent.com/<you>/<repo>/main/ota/latest.json`.
+  Leave it **empty to disable update checking entirely** (the default).
+- **Update download URL prefix** — the base the dialog appends the version to when
+  an update is found, e.g.
+  `https://github.com/<you>/<repo>/releases/download/V` → the dialog opens
+  `…/releases/download/V1.2.0`.
+
+How it works: on startup (and when you click **Check Update**) the app fetches the
+check URL and compares its `version` against the app's own `package.json` version.
+Versions must be `x.y.z` (three numeric parts); anything else is treated as
+"up to date". When a newer version is found, the upgrade dialog offers the
+download URL built from the prefix.
+
+The logic lives in [src/plugins/VersionHelper.js](src/plugins/VersionHelper.js);
+the values are stored under `system.updateCheckUrl` and
+`system.updateDownloadUrlPrefix`.

@@ -225,7 +225,9 @@ class MainWindow {
         ipcMain.handle('check-update', async event => {
 
             try {
-                const res = await checkUpdate();
+                // Update source is user-configured via the store; no upstream
+                // repo is contacted unless the user sets system.updateCheckUrl.
+                const res = await checkUpdate(this.storeManager);
                 console.log('MainWindow: check-update: haveUpdate', res && res.haveUpdate, 'version', res && res.version);
                 return res;
             } catch (error) {

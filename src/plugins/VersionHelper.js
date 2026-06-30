@@ -1,22 +1,43 @@
 import { axios } from './request'
 import config from "../../package.json";
 
-const UPDATE_CONFIG = [
-    {
-        versionCheckUrl: "https://raw.github.com/DecoKeeAI/DecoKeeAI/main/ota/latest.json",
-        downloadUrlPrefix: "https://github.com/DecoKeeAI/DecoKeeAI/releases/download/V",
-    },
-    {
-        versionCheckUrl: "https://gitee.com/decokeeai/decokee-ai/raw/main/ota/latest.json",
-        downloadUrlPrefix: "https://gitee.com/decokeeai/decokee-ai/releases/download/V"
-    }
-]
+/*
+ * Update source is USER-CONFIGURED, not hardcoded to the official repo.
+ *
+ * The user sets their own GitHub (or any) release source in Settings, stored as:
+ *   system.updateCheckUrl          -> a JSON endpoint returning { "version": "x.y.z" }
+ *                                     (e.g. a raw file in your repo, or a release asset)
+ *   system.updateDownloadUrlPrefix -> the download URL prefix the dialog appends the
+ *                                     version to (e.g.
+ *                                     "https://github.com/<you>/<repo>/releases/download/V")
+ *
+ * If updateCheckUrl is not set, checkUpdate() is a NO-OP: it returns
+ * { haveUpdate: false } and makes no network request. This is the default —
+ * the app never contacts the upstream DecoKeeAI repo on its own.
+ */
 
-export function checkUpdate(checkUpdateUriIdx = 0) {
+/**
+ * @param {object} [storeManager] main-process StoreManager (has storeGet). When
+ *   omitted (or no URL configured), this is a no-op returning haveUpdate:false.
+ */
+export function checkUpdate(storeManager) {
     return new Promise((resolve) => {
         const currentVersion = config.version;
 
-        const checkUpdateUrl = UPDATE_CONFIG[checkUpdateUriIdx].versionCheckUrl;
+        const checkUpdateUrl = storeManager && storeManager.storeGet
+            ? storeManager.storeGet('system.updateCheckUrl', '')
+            : '';
+        const downloadUrlPrefix = storeManager && storeManager.storeGet
+            ? storeManager.storeGet('system.updateDownloadUrlPrefix', '')
+            : '';
+
+        // Not configured -> do nothing, no network call.
+        if (!checkUpdateUrl) {
+            console.log('checkUpdate: no update source configured — skipping.');
+            resolve({ haveUpdate: false, version: currentVersion });
+            return;
+        }
+
         console.log("checkUpdate: checkUpdateUrl: ", checkUpdateUrl);
         return axios({
             headers: {
@@ -30,15 +51,10 @@ export function checkUpdate(checkUpdateUriIdx = 0) {
             console.log("checkUpdate: ", res);
 
             if (!res || !res.version) {
-                if (checkUpdateUriIdx >= UPDATE_CONFIG.length) {
-                    resolve({
-                        haveUpdate: false,
-                        version: currentVersion
-                    });
-                    return;
-                }
-
-                resolve(await checkUpdate(checkUpdateUriIdx + 1));
+                resolve({
+                    haveUpdate: false,
+                    version: currentVersion
+                });
                 return;
             }
 
@@ -72,7 +88,7 @@ export function checkUpdate(checkUpdateUriIdx = 0) {
                     resolve({
                         haveUpdate: true,
                         version: latestVersion,
-                        downloadUrlPrefix: UPDATE_CONFIG[checkUpdateUriIdx].downloadUrlPrefix
+                        downloadUrlPrefix: downloadUrlPrefix
                     });
                     return;
                 } else if (cmpResult < 0) {
@@ -88,17 +104,12 @@ export function checkUpdate(checkUpdateUriIdx = 0) {
                 haveUpdate: false,
                 version: currentVersion
             });
-        }).catch(async err=> {
+        }).catch(err => {
             console.log('checkUpdate: Detected error', err.message);
-            if (checkUpdateUriIdx >= UPDATE_CONFIG.length) {
-                resolve({
-                    haveUpdate: false,
-                    version: currentVersion
-                });
-                return;
-            }
-
-            resolve(await checkUpdate(checkUpdateUriIdx + 1));
+            resolve({
+                haveUpdate: false,
+                version: currentVersion
+            });
         });
     });
 }

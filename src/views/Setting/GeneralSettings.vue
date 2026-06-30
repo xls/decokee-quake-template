@@ -21,6 +21,30 @@
             </el-col>
         </el-row>
         <el-row :gutter="24" class="setting-item-row">
+            <el-col :span="10" class="setting-item-label">{{ $t('settings.updateCheckUrl') }}</el-col>
+            <el-col :span="12">
+                <el-input
+                    v-model="updateCheckUrl"
+                    size="small"
+                    clearable
+                    :placeholder="$t('settings.updateCheckUrlHint')"
+                    @change="updateCheckUrlChange"
+                />
+            </el-col>
+        </el-row>
+        <el-row :gutter="24" class="setting-item-row">
+            <el-col :span="10" class="setting-item-label">{{ $t('settings.updateDownloadUrlPrefix') }}</el-col>
+            <el-col :span="12">
+                <el-input
+                    v-model="updateDownloadUrlPrefix"
+                    size="small"
+                    clearable
+                    :placeholder="$t('settings.updateDownloadUrlPrefixHint')"
+                    @change="updateDownloadUrlPrefixChange"
+                />
+            </el-col>
+        </el-row>
+        <el-row :gutter="24" class="setting-item-row">
             <el-col :span="10" class="setting-item-label">{{ $t('settings.language') }}</el-col>
             <el-col :span="12">
                 <el-dropdown size="small" @command="handleLocaleChange">
@@ -114,7 +138,11 @@ export default {
             monitorAppViewMaster: true,
             monitorAppViewMethod: 'default',
             monitorAppViewFrameRate: 1,
-            sendMonitorAppConfigChangeTask: undefined
+            sendMonitorAppConfigChangeTask: undefined,
+
+            // User-configured update source (empty = updates disabled / no-op).
+            updateCheckUrl: '',
+            updateDownloadUrlPrefix: '',
         };
     },
     mounted() {
@@ -136,6 +164,9 @@ export default {
             this.monitorAppViewMethod = window.store.storeGet('system.appMonitorMethod', 'default');
             this.monitorAppViewFrameRate = window.store.storeGet('system.appMonitorFrameRate', 1);
 
+            this.updateCheckUrl = window.store.storeGet('system.updateCheckUrl', '');
+            this.updateDownloadUrlPrefix = window.store.storeGet('system.updateDownloadUrlPrefix', '');
+
         });
     },
     methods: {
@@ -150,6 +181,18 @@ export default {
         openAsHiddenChange(enable) {
             window.store.storeSet('system.openAsHidden', enable);
             console.log('After open-as-hidden change:', window.store.storeGet('system.openAsHidden'));
+        },
+        updateCheckUrlChange(value) {
+            const v = (value || '').trim();
+            this.updateCheckUrl = v;
+            window.store.storeSet('system.updateCheckUrl', v);
+            console.log('After update-check-url change:', v || '(disabled)');
+        },
+        updateDownloadUrlPrefixChange(value) {
+            const v = (value || '').trim();
+            this.updateDownloadUrlPrefix = v;
+            window.store.storeSet('system.updateDownloadUrlPrefix', v);
+            console.log('After update-download-url-prefix change:', v);
         },
         enableStartOnBootChange(enable) {
             if (!enable) {
